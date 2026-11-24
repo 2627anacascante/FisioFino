@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.Connection;
+import java.sql.SQLException;
 
 
 /**** AQUESTA CLASSE DEFINEIX LA CONNEXIÓ I EL DATASOURCE */
@@ -32,12 +34,22 @@ public class Connexio {
     hkcfg.setJdbcUrl(prop.getProperty("DB_URL"));
     hkcfg.setUsername(prop.getProperty("DB_USER"));
     hkcfg.setPassword(prop.getProperty("DB_PASSWORD"));
-    hkcfg.setPoolName(prop.getProperty("DB_MAX_POOL"));
+    hkcfg.setMaximumPoolSize(Integer.parseInt(prop.getProperty("DB_MAX_POOL")));
 
+    
+
+    try(HikariDataSource hkds = new HikariDataSource(hkcfg);
+        Connection cnn = hkds.getConnection()){
+    }catch (PoolInitializationException pie){
+        pie.printStackTrace();
+    }catch(SQLException sqle){
+        sqle.printStackTrace();
     }
+}
 
-    public static void tancaConnexio() {
+    public static void tancaConnexio(Connection cnn) throws SQLException{
         /************* HAS DE COMPLETAR EL CODI ******************/
+        cnn.close();
     }
 
     private static Properties loadProperties(String connPropertiesPath){
