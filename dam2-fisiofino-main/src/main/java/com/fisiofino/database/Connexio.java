@@ -1,6 +1,13 @@
 package com.fisiofino.database;
-
+import java.util.Properties;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+import com.zaxxer.hikari.pool.HikariPool.PoolInitializationException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 
 /**** AQUESTA CLASSE DEFINEIX LA CONNEXIÓ I EL DATASOURCE */
 
@@ -20,10 +27,32 @@ public class Connexio {
      */
     public static void iniciaConnexio(String connPropertiesPath) throws IOException {
         /************* HAS DE COMPLETAR EL CODI ******************/
+    Properties prop = loadProperties(connPropertiesPath);
+    HikariConfig hkcfg = new HikariConfig();
+    hkcfg.setJdbcUrl(prop.getProperty("DB_URL"));
+    hkcfg.setUsername(prop.getProperty("DB_USER"));
+    hkcfg.setPassword(prop.getProperty("DB_PASSWORD"));
+    hkcfg.setPoolName(prop.getProperty("DB_MAX_POOL"));
+
     }
 
     public static void tancaConnexio() {
         /************* HAS DE COMPLETAR EL CODI ******************/
+    }
+
+    private static Properties loadProperties(String connPropertiesPath){
+        Properties prop = new Properties();
+        try (InputStream in = GestioPacients.class.getClassLoader().getResourceAsStream("conn.properties")){
+            if ( in != null){
+                prop.load(in);
+            }else{
+                prop.load(Files.newBufferedReader(Path.of(connPropertiesPath)));
+            }
+
+        }catch (IOException ioe){
+            ioe.printStackTrace();
+        }
+        return prop;
     }
 
 }
