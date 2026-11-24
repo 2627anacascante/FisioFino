@@ -10,7 +10,7 @@ import com.fisiofino.vista.MenuView;
 public class Main {
     public static void main(String[] args) {
         try {
-            Connexio.iniciaConnexio();
+            Connexio.iniciaConnexio("conn.properties");
             MenuView vista = new MenuView();
             GestioPacients gestioPacients = new GestioPacients();
             Controller conT = new Controller(vista,gestioPacients);
