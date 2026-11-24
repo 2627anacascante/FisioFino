@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS patient (
     -- private String unit;
     -- private String frequency;
 
-CREATE TABLE IF NOT EXISTS malaltia (
+CREATE TABLE IF NOT EXISTS malaltiaPacient (
     id_malaltia SERIAL PRIMARY KEY,
     treatment VARCHAR(1OO),
     dniPacient VARCHAR(20) NOT NULL,

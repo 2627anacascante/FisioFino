@@ -1,39 +1,91 @@
 package com.fisiofino.database;
 
-
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.postgresql.core.v3.SqlSerializationContext;
+
 import com.fisiofino.model.MalaltiaPacient;
 import com.fisiofino.model.Pacient;
+import com.zaxxer.hikari.pool.HikariPool.PoolInitializationException;
+
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
 
 public class GestioPacients {
 
 //Apartat 1: Insercions a partir del XML
-    public int CreatePatient(Pacient p) throws SQLException {
+    public int CreatePatient(Pacient p) throws SQLException, IOException, PoolInitializationException {
+        String sql = """
+            INSERT INTO patient
+                (given_name, family_name, nif, birth_date, gender, address,
+                 city, postal_code, country, telephone, email)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """;
 
-        int idPacient = 0;
+        try (Connection con = Connexio.getConnection();
+             PreparedStatement stmt = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            stmt.setString(1, p.getGivenName());
+            stmt.setString(2, p.getFamilyName());
+            stmt.setString(3, p.getDni());
+            stmt.setObject(4, p.getBirthDate());
+            stmt.setString(5, p.getGender());
+            stmt.setString(6, p.getAddress());
+            stmt.setString(7, p.getCity());
+            stmt.setString(8, p.getPostalCode());
+            stmt.setString(9, p.getCountry());
+            stmt.setString(10, p.getTelephone());
+            stmt.setString(11, p.getEmail());
 
-        /**************** HAS DE COMPLETAR EL CODI *******************/
+            if (stmt.executeUpdate() != 1) {
+                throw new SQLException("No se pudo insertar el paciente");
+            }
 
-        return idPacient;
+            try (ResultSet keys = stmt.getGeneratedKeys()) {
+                if (keys.next()) {
+                    return keys.getInt(1);
+                }
+            }
+        }
+        throw new SQLException("La base de datos no devolvió el ID del paciente");
     }
 
-    public boolean CreateMalaltia(MalaltiaPacient mp) throws SQLException {
+    public boolean CreateMalaltiaPacient(MalaltiaPacient mp) throws SQLException {
+        String sql = """
+            INSERT INTO malaltia
+                (treatment, dniPacient, malaltia_status, code, malaltia_name, dose, unit, frequency)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """;
 
-        boolean malaltiaCreada = false;
+        try (Connection con = Connexio.getConnection();
+             PreparedStatement stmt = con.prepareStatement(sql)) {
+            stmt.setString(1, mp.getTreatment());
+            stmt.setString(2, mp.getDniPacient());
+            stmt.setString(3, mp.getStatus());
+            stmt.setString(4, mp.getCode());
+            stmt.setString(5, mp.getName());
+            stmt.setDouble(6, mp.getDose());
+            stmt.setString(7, mp.getUnit());
+            stmt.setString(8, mp.getFrequency());
 
-        /**************** HAS DE COMPLETAR EL CODI *******************/
-        
-        return malaltiaCreada;
+            if (stmt.executeUpdate() != 1) {
+                throw new SQLException("No se pudo insertar la enfermedad");
+            }
+            return true;
+        }
     }    
 
-    public boolean CreateMalaltiaPacient(MalaltiaPacient mp) throws SQLException {
+    public boolean CreateMalaltia(MalaltiaPacient mp) throws SQLException {
 
         boolean malaltiaPacientCreada = false;
 
         /**************** HAS DE COMPLETAR EL CODI *******************/
         
+        malaltiaPacientCreada = true;
         return malaltiaPacientCreada;
     }    
 
@@ -43,6 +95,7 @@ public class GestioPacients {
         Pacient p = null;
 
         /**************** HAS DE COMPLETAR EL CODI *******************/
+        p.getDni(dni_nie);
 
         return  p;
     }

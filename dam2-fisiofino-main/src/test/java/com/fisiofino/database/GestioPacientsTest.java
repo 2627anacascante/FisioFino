@@ -23,6 +23,8 @@ import org.junit.jupiter.api.Test;
 import com.fisiofino.model.MalaltiaPacient;
 import com.fisiofino.model.Pacient;
 
+import java.sql.SQLException;
+
 /**
  * Tests mínims de la base de dades.
  * Abans de cada test es recrea l'esquema, sempre es parteix de taules buides.
