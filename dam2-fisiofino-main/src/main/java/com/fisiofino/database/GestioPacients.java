@@ -56,7 +56,7 @@ public class GestioPacients {
 
     public boolean CreateMalaltiaPacient(MalaltiaPacient mp) throws SQLException {
         String sql = """
-            INSERT INTO malaltia
+            INSERT INTO malaltiaPacient
                 (treatment, dniPacient, malaltia_status, code, malaltia_name, dose, unit, frequency)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """;
@@ -68,12 +68,12 @@ public class GestioPacients {
             stmt.setString(3, mp.getStatus());
             stmt.setString(4, mp.getCode());
             stmt.setString(5, mp.getName());
-            stmt.setDouble(6, mp.getDose());
+            stmt.setInt(6, mp.getDose());
             stmt.setString(7, mp.getUnit());
             stmt.setString(8, mp.getFrequency());
 
             if (stmt.executeUpdate() != 1) {
-                throw new SQLException("No se pudo insertar la enfermedad");
+                throw new SQLException("No se pudo insertar la enfermedad en el paciente");
             }
             return true;
         }
@@ -81,39 +81,120 @@ public class GestioPacients {
 
     public boolean CreateMalaltia(MalaltiaPacient mp) throws SQLException {
 
-        boolean malaltiaPacientCreada = false;
-
         /**************** HAS DE COMPLETAR EL CODI *******************/
-        
-        malaltiaPacientCreada = true;
-        return malaltiaPacientCreada;
+        String sql = """
+        INSERT INTO malaltia
+            (malaltia_name, code)
+        VALUES (?, ?))
+        """;
+
+    try (Connection conn = Connexio.getConnection();
+         PreparedStatement stmt = conn.prepareStatement(sql)){
+            stmt.setString(1, mp.getName());
+            stmt.setString(2, mp.getCode());
+
+            if (stmt.executeUpdate() != 1){
+                throw new SQLException("no se pudo crear la enfermedad");
+            }
+            return true;
+         }
+
     }    
 
 //Apartat 2: Cerca de pacient per DNI
     public Pacient findBydniNie(String dni_nie) throws SQLException {
-            
-        Pacient p = null;
+        String sql = """
+            SELECT given_name, family_name, nif, birth_date, gender, address,
+                   city, postal_code, country, telephone, email
+            FROM patient
+            WHERE nif = ?
+            """;
 
-        /**************** HAS DE COMPLETAR EL CODI *******************/
-        p.getDni(dni_nie);
+        try (Connection con = Connexio.getConnection();
+             PreparedStatement stmt = con.prepareStatement(sql)) {
+            stmt.setString(1, dni_nie);
 
-        return  p;
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (!rs.next()) {
+                    return null;
+                }
+
+                Pacient p = new Pacient();
+                p.setGivenName(rs.getString("given_name"));
+                p.setFamilyName(rs.getString("family_name"));
+                p.setDni(rs.getString("nif"));
+                p.setBirthDate(rs.getObject("birth_date", java.time.LocalDate.class));
+                p.setGender(rs.getString("gender"));
+                p.setAddress(rs.getString("address"));
+                p.setCity(rs.getString("city"));
+                p.setPostalCode(rs.getString("postal_code"));
+                p.setCountry(rs.getString("country"));
+                p.setTelephone(rs.getString("telephone"));
+                p.setEmail(rs.getString("email"));
+                return p;
+            }
+        }
     }
 
 //Apartat 3: Malalties del pacient
     public List<MalaltiaPacient> findDiseaseBydniNie(String dni_nie) throws SQLException {
-        List<MalaltiaPacient> malaltiespacient = new ArrayList<MalaltiaPacient>();
+        String sql = """
+            SELECT treatment, dniPacient, malaltia_status, code, malaltia_name, dose, unit, frequency
+            FROM malaltiaPacient
+            WHERE dniPacient = ?
+            """;
 
-        /**************** HAS DE COMPLETAR EL CODI *******************/    
+        List<MalaltiaPacient> malaltiespacient = new ArrayList<>();
+        try (Connection con = Connexio.getConnection();
+             PreparedStatement stmt = con.prepareStatement(sql)) {
+            stmt.setString(1, dni_nie);
 
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    MalaltiaPacient mp = new MalaltiaPacient();
+                    mp.setTreatment(rs.getString("treatment"));
+                    mp.setDniPacient(rs.getString("dniPacient"));
+                    mp.setCode(rs.getString("code"));
+                    mp.setDose(rs.getInt("dose"));
+                    mp.setName(rs.getString("malaltia_name"));
+                    mp.setStatus(rs.getString("malaltia_status"));
+                    mp.setFrequency(rs.getString("frequency"));
+                    mp.setUnit(rs.getString("unit"));
+                    malaltiespacient.add(mp);
+                }
+            }
+        }
         return malaltiespacient;
     }
 
 //Apartat 4: Llistar tots els pacients
     public List<Pacient> findAllPacients () throws SQLException {
         List<Pacient> pacients = new ArrayList<>();
+        String sql = """
+            SELECT given_name, family_name, nif, birth_date, gender, address,
+                   city, postal_code, country, telephone, email
+            FROM patient
+            """;
 
-        /**************** HAS DE COMPLETAR EL CODI *******************/
+        try (Connection con = Connexio.getConnection();
+             PreparedStatement stmt = con.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                Pacient p = new Pacient();
+                p.setGivenName(rs.getString("given_name"));
+                p.setFamilyName(rs.getString("family_name"));
+                p.setDni(rs.getString("nif"));
+                p.setBirthDate(rs.getObject("birth_date", java.time.LocalDate.class));
+                p.setGender(rs.getString("gender"));
+                p.setAddress(rs.getString("address"));
+                p.setCity(rs.getString("city"));
+                p.setPostalCode(rs.getString("postal_code"));
+                p.setCountry(rs.getString("country"));
+                p.setTelephone(rs.getString("telephone"));
+                p.setEmail(rs.getString("email"));
+                pacients.add(p);
+            }
+        }
         
         return pacients;
     }
@@ -123,6 +204,26 @@ public class GestioPacients {
         boolean modificat = false;
 
         /**************** HAS DE COMPLETAR EL CODI *******************/
+        String sql = """
+            SELECT treatment, dniPacient, malaltia_status, code, malaltia_name, dose, unit, frequency
+            FROM malaltiaPacient
+            WHERE dniPacient = ?
+            """;
+
+        try (Connection con = Connexio.getConnection();
+        PreparedStatement stmt = con.prepareStatement(sql)){
+        stmt.setInt(1, idPacient);
+        stmt.setString(2, snomedCode);
+        stmt.setString(3, status);
+        
+        try (ResultSet rs = stmt.executeQuery()){
+            while (!modificat) {
+                MalaltiaPacient malaltiaPacient = new MalaltiaPacient();
+                malaltiaPacient.setStatus(rs.getString("status"));
+           }
+
+        }
+    }
 
         return  modificat;
     }
@@ -132,6 +233,23 @@ public class GestioPacients {
         boolean esMalaltia = false;
         
         /**************** HAS DE COMPLETAR EL CODI *******************/
+        String sql = """
+            SELECT malaltia_name, code
+            FROM malaltia
+            WHERE code = ?
+            """;
+
+        try (Connection con = Connexio.getConnection();
+        PreparedStatement stmt = con.prepareStatement(sql)){
+            stmt.setString(1, SnomedCode);
+
+            try(ResultSet rs = stmt.executeQuery()){
+                while (!esMalaltia) {
+                    MalaltiaPacient mp = new MalaltiaPacient();
+                    mp.setCode(rs.getString("code"));
+                }
+            }
+        }
         
         return esMalaltia;
     }
@@ -140,7 +258,34 @@ public class GestioPacients {
         boolean esMalaltiaPacient = false;
 
         /**************** HAS DE COMPLETAR EL CODI *******************/
+        String sql = """
+        SELECT treatment, dniPacient, malaltia_status, code, malaltia_name, dose, unit, frequency
+            FROM malaltiaPacient
+            WHERE dniPacient = ?
+        """;
+
+        try (Connection con = Connexio.getConnection();
+        PreparedStatement stmt = con.prepareStatement(sql)){
+            stmt.setString(1, dniPacient);
+            stmt.setString(2, SnomedCode);
+            stmt.setString(3, status);
         
+
+            try (ResultSet rs = stmt.executeQuery()){
+                while (!esMalaltiaPacient) {
+                    MalaltiaPacient mp = new MalaltiaPacient();
+                    mp.setTreatment(rs.getString("treatment"));
+                    mp.setDniPacient(rs.getString("dniPacient"));
+                    mp.setCode(rs.getString("code"));
+                    mp.setDose(rs.getInt("dose"));
+                    mp.setName(rs.getString("malaltia_name"));
+                    mp.setStatus(rs.getString("malaltia_status"));
+                    mp.setFrequency(rs.getString("frequency"));
+                    mp.setUnit(rs.getString("unit"));
+                    
+                }
+            }
+        }
         return esMalaltiaPacient;
     }
 
