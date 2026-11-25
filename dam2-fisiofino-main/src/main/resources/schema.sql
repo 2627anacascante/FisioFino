@@ -24,22 +24,26 @@ CREATE TABLE IF NOT EXISTS patient (
     -- private String unit;
     -- private String frequency;
 
-CREATE TABLE IF NOT EXISTS malaltiaPacient (
+CREATE TABLE IF NOT EXISTS patient_disease (
     id_malaltia_pacient SERIAL PRIMARY KEY,
-    treatment VARCHAR(1OO),
+    treatment VARCHAR(100),
     dniPacient VARCHAR(20) NOT NULL,
     malaltia_status VARCHAR(20),
     code VARCHAR(30),
-    malaltia_name VARCHAR(20),
+    malaltia_name VARCHAR(100),
     dose INT,
     unit VARCHAR(3),
     frequency VARCHAR(30)
 );
 
-CREATE TABLE IF NOT EXISTS malaltia {
+CREATE TABLE IF NOT EXISTS disease (
     id_malaltia SERIAL PRIMARY KEY,
-    malaltia_name VARCHAR(20),
+    malaltia_name VARCHAR(100),
     code VARCHAR(30)
+);
 
+ALTER TABLE patient_disease
+    ALTER COLUMN malaltia_name TYPE VARCHAR(100);
 
-}
+ALTER TABLE disease
+    ALTER COLUMN malaltia_name TYPE VARCHAR(100);

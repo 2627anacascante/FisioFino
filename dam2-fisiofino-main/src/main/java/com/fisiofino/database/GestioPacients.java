@@ -56,7 +56,7 @@ public class GestioPacients {
 
     public boolean CreateMalaltiaPacient(MalaltiaPacient mp) throws SQLException {
         String sql = """
-            INSERT INTO malaltiaPacient
+            INSERT INTO patient_disease
                 (treatment, dniPacient, malaltia_status, code, malaltia_name, dose, unit, frequency)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """;
@@ -83,9 +83,9 @@ public class GestioPacients {
 
         /**************** HAS DE COMPLETAR EL CODI *******************/
         String sql = """
-        INSERT INTO malaltia
+        INSERT INTO disease
             (malaltia_name, code)
-        VALUES (?, ?))
+        VALUES (?, ?)
         """;
 
     try (Connection conn = Connexio.getConnection();
@@ -140,7 +140,7 @@ public class GestioPacients {
     public List<MalaltiaPacient> findDiseaseBydniNie(String dni_nie) throws SQLException {
         String sql = """
             SELECT treatment, dniPacient, malaltia_status, code, malaltia_name, dose, unit, frequency
-            FROM malaltiaPacient
+            FROM patient_disease
             WHERE dniPacient = ?
             """;
 
@@ -201,92 +201,61 @@ public class GestioPacients {
 
 //Apartat 5: Modificar l'estat d'una malaltia d'un pacient
     public boolean updateStatus (int idPacient, String snomedCode, String status) throws SQLException {
-        boolean modificat = false;
-
-        /**************** HAS DE COMPLETAR EL CODI *******************/
         String sql = """
-            SELECT treatment, dniPacient, malaltia_status, code, malaltia_name, dose, unit, frequency
-            FROM malaltiaPacient
-            WHERE dniPacient = ?
+            UPDATE patient_disease
+            SET malaltia_status = ?
+            WHERE dniPacient = (SELECT nif FROM patient WHERE id_patient = ?)
+              AND code = ?
             """;
 
         try (Connection con = Connexio.getConnection();
-        PreparedStatement stmt = con.prepareStatement(sql)){
-        stmt.setInt(1, idPacient);
-        stmt.setString(2, snomedCode);
-        stmt.setString(3, status);
-        
-        try (ResultSet rs = stmt.executeQuery()){
-            while (!modificat) {
-                MalaltiaPacient malaltiaPacient = new MalaltiaPacient();
-                malaltiaPacient.setStatus(rs.getString("status"));
-           }
+             PreparedStatement stmt = con.prepareStatement(sql)) {
+            stmt.setString(1, status);
+            stmt.setInt(2, idPacient);
+            stmt.setString(3, snomedCode);
 
+            return stmt.executeUpdate() > 0;
+            // retorna true si se actualizó al menos una fila, false si no se actualizó ninguna
         }
     }
 
-        return  modificat;
-    }
-
-// funcions i mètodes accesoris i necessaris per saber si s'ha d'insertar o modificar    
     public boolean findMalaltia (String SnomedCode) throws SQLException {
-        boolean esMalaltia = false;
-        
-        /**************** HAS DE COMPLETAR EL CODI *******************/
         String sql = """
-            SELECT malaltia_name, code
-            FROM malaltia
+            SELECT 1
+            FROM disease
             WHERE code = ?
             """;
-
+//selecciona 1 de la tabla disease donde el código coincide con el código Snomed proporcionado. 
+// Si se encuentra una fila, significa que la enfermedad existe en la base de datos.
         try (Connection con = Connexio.getConnection();
-        PreparedStatement stmt = con.prepareStatement(sql)){
-            stmt.setString(1, SnomedCode);
+             PreparedStatement stmt = con.prepareStatement(sql)) {
+            stmt.setString(1, SnomedCode);//añade el valor del código Snomed al parámetro de la consulta
 
-            try(ResultSet rs = stmt.executeQuery()){
-                while (!esMalaltia) {
-                    MalaltiaPacient mp = new MalaltiaPacient();
-                    mp.setCode(rs.getString("code"));
-                }
-            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next();
+            }//buscando si hay un resultado, si hay un resultado devuelve true, si no devuelve false
         }
-        
-        return esMalaltia;
     }
 
     public boolean findMalaltiaPacient (String dniPacient, String SnomedCode, String status) throws SQLException {
-        boolean esMalaltiaPacient = false;
-
-        /**************** HAS DE COMPLETAR EL CODI *******************/
         String sql = """
-        SELECT treatment, dniPacient, malaltia_status, code, malaltia_name, dose, unit, frequency
-            FROM malaltiaPacient
+            SELECT 1
+            FROM patient_disease
             WHERE dniPacient = ?
-        """;
-
+              AND code = ?
+              AND malaltia_status = ?
+            """;
+//Selecciona 1 de la tabla patient_disease donde el dni del paciente, el código Snomed y el estado de la enfermedad coinciden con los valores proporcionados.
         try (Connection con = Connexio.getConnection();
-        PreparedStatement stmt = con.prepareStatement(sql)){
-            stmt.setString(1, dniPacient);
-            stmt.setString(2, SnomedCode);
-            stmt.setString(3, status);
-        
+             PreparedStatement stmt = con.prepareStatement(sql)) {
+            stmt.setString(1, dniPacient);//añade el valor del dni del paciente al parámetro de la consulta
+            stmt.setString(2, SnomedCode);//añade el valor del código Snomed al parámetro de la consulta
+            stmt.setString(3, status);//añade el valor del estado de la enfermedad al parámetro de la consulta
 
-            try (ResultSet rs = stmt.executeQuery()){
-                while (!esMalaltiaPacient) {
-                    MalaltiaPacient mp = new MalaltiaPacient();
-                    mp.setTreatment(rs.getString("treatment"));
-                    mp.setDniPacient(rs.getString("dniPacient"));
-                    mp.setCode(rs.getString("code"));
-                    mp.setDose(rs.getInt("dose"));
-                    mp.setName(rs.getString("malaltia_name"));
-                    mp.setStatus(rs.getString("malaltia_status"));
-                    mp.setFrequency(rs.getString("frequency"));
-                    mp.setUnit(rs.getString("unit"));
-                    
-                }
-            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next();
+            }//buscando si hay un resultado, si hay un resultado devuelve true, si no devuelve false
         }
-        return esMalaltiaPacient;
     }
 
 

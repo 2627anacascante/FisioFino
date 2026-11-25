@@ -11,6 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -300,7 +301,18 @@ class GestioPacientsTest {
     }
 
     private static String estat(int idPacient, String codi) throws Exception {
-        return (String) valor("SELECT status FROM patient_disease WHERE id_patient = " + idPacient
-                + " AND snomed_code = '" + codi + "'");
+        String sql = """
+                SELECT pd.malaltia_status
+                FROM patient_disease pd
+                JOIN patient p ON p.nif = pd.dniPacient
+                WHERE p.id_patient = ? AND pd.code = ?
+                """;
+        try (Connection c = obreConnexio(); PreparedStatement s = c.prepareStatement(sql)) {
+            s.setInt(1, idPacient);
+            s.setString(2, codi);
+            try (ResultSet rs = s.executeQuery()) {
+                return rs.next() ? rs.getString(1) : null;
+            }
+        }
     }
 }
