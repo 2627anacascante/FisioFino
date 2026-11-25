@@ -1,6 +1,7 @@
 package com.fisiofino;
 
 import java.io.IOException;
+import java.sql.SQLException;
 
 import com.fisiofino.controlador.Controller;
 import com.fisiofino.database.Connexio;
@@ -13,10 +14,13 @@ public class Main {
             Connexio.iniciaConnexio("conn.properties");
             MenuView vista = new MenuView();
             GestioPacients gestioPacients = new GestioPacients();
-            Controller conT = new Controller(vista,gestioPacients);
+            Controller conT = new Controller(vista, gestioPacients);
             conT.inicia();
         } catch (IOException e) {
             System.out.println("No s'ha pogut carregar la configuració: " + e.getMessage());
+        }catch(SQLException sqle){
+        sqle.printStackTrace();
+        
         } finally {
             Connexio.tancaConnexio();
         }
